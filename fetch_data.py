@@ -10,16 +10,16 @@ import sys
 
 
 def data2dict(shotn, signame, hf, atlconn) :
-	dict_group = hf.create_group(str(signame))
-	try:
-		data = gadata(signame, shotn, connection=atlconn)
-		dict_group['xdata'] = data.xdata
-		dict_group['ydata'] = data.ydata
-		dict_group['zdata'] = data.zdata
-		dict_group['xunits'] = data.xunits
-		dict_group['yunits'] = data.yunits
-		dict_group['zunits'] = data.zunits
-	except: 
+        dict_group = hf.create_group(str(signame))
+        try:
+                data = gadata(signame, shotn, connection=atlconn)
+                dict_group['xdata'] = data.xdata
+                dict_group['ydata'] = data.ydata
+                dict_group['zdata'] = data.zdata
+                dict_group['xunits'] = data.xunits
+                dict_group['yunits'] = data.yunits
+                dict_group['zunits'] = data.zunits
+        except: 
                 print('%s not available, filled with NULL!' % (signame))
                 dict_group['xdata'] = []
                 dict_group['ydata'] = []
@@ -27,11 +27,11 @@ def data2dict(shotn, signame, hf, atlconn) :
                 dict_group['xunits'] = []
                 dict_group['yunits'] = []
                 dict_group['zunits'] = []
-		del atlconn
-		#global atlconn
+                del atlconn
+                #global atlconn
                 atlconn = MDSplus.Connection('atlas.gat.com')
-		pass
-	return atlconn
+                pass
+        return atlconn
 
 atlconn = MDSplus.Connection('atlas.gat.com')
 ech_gytname = ['lei','luk','r2d']
@@ -41,6 +41,7 @@ ech_gytname = ['lei','luk','r2d']
 # shot_list = [np.int32(sys.argv[1])]
 # shot_list=[1]#[174092, 174096, 174097]
 shot_list=np.arange(176036,176036+1)
+cscratch_username = 'kraaijenhagenr' # 'chenh'
 
 signal_list= {
 'profiles':['aminor','alpha','bcoil', 'betan', 'bmspinj', 'bmstinj', 'bt', 'dssdenest', 'edensfit', 'etempfit', 'fzns', 'ip', 'ipsip', 'iptipp', 'neutronsrate', 'pcbcoil', 'pinj', 'plasticfix', 'pnbi', 'pres', 'q', 'q95', 'tinj', 'n1rms', 'n2rms', 'r0', 'kappa', 'tritop', 'tribot', 'gapin', 'fs00', 'fs01', 'fs02', 'fs03', 'fs04', 'fs05', 'fs06', 'fs07', 'psirz', 'psin', 'rhovn', 'irtvpitr2']
@@ -53,8 +54,8 @@ signal_list= {
 
 profl = False
 ece_pcece= False
-ts = False
-co2= True
+ts = True
+co2= False
 cer= False
 mse= False
 magnetics = False
@@ -66,27 +67,27 @@ for shotn in shot_list:
         
         if profl:
             for grpname,signals in signal_list.items():
-                    hf = h5py.File('/cscratch/chenn/data-fetching/data/'+ str(shotn)+'_'+grpname+'.h5','w')
+                    hf = h5py.File(f'/cscratch/{cscratch_username}/data-fetching/data/'+ str(shotn)+'_'+grpname+'.h5','w')
                     for signame in signals:
                             atlconn=data2dict(shotn,signame,hf,atlconn)
                     hf.close()
 
 
         if ece_pcece:
-                hf = h5py.File('/cscratch/chenn/data-fetching/data/'+ str(shotn)+'_ece.h5','w')
-                pece_group = hf.create_group('pcece')	
-		ece_group = hf.create_group('ece')
-#		rtece_group = hf.create_group('rtece')
+                hf = h5py.File(f'/cscratch/{cscratch_username}/data-fetching/data/'+ str(shotn)+'_ece.h5','w')
+                pece_group = hf.create_group('pcece')        
+                ece_group = hf.create_group('ece')
+#                rtece_group = hf.create_group('rtece')
 
                 for k in range(40):
                         print('chn %i' % (k+1))
                         pece_data = gadata('pcece%d' % (k+1), shotn, connection=atlconn)
                         pece_group['pcece%02d' % (k+1)] = pece_data.zdata
-			ece_data = gadata('tecef%02d' % (k+1), shotn, connection=atlconn)
-			ece_group['tecef%02d' % (k+1)] = ece_data.zdata
+                        ece_data = gadata('tecef%02d' % (k+1), shotn, connection=atlconn)
+                        ece_group['tecef%02d' % (k+1)] = ece_data.zdata
 
-#			rtece_data = gadata('ecsdata%d' % (k+97), shotn, connection=atlconn)
-#			rtece_group['ecsdata%d' % (k+97)] = rtece_data.zdata
+#                        rtece_data = gadata('ecsdata%d' % (k+97), shotn, connection=atlconn)
+#                        rtece_group['ecsdata%d' % (k+97)] = rtece_data.zdata
 
                 pece_group['xdata'] = pece_data.xdata
                 pece_group['ydata'] = pece_data.ydata
@@ -94,26 +95,26 @@ for shotn in shot_list:
                 pece_group['yunits'] = pece_data.yunits
                 pece_group['pceceunits'] = pece_data.zunits
 
-		ece_group['xdata'] = ece_data.xdata
-		ece_group['ydata'] = ece_data.ydata
-		ece_group['xunits'] = ece_data.xunits
-		ece_group['yunits'] = ece_data.yunits
-		ece_group['eceunits'] = ece_data.zunits
+                ece_group['xdata'] = ece_data.xdata
+                ece_group['ydata'] = ece_data.ydata
+                ece_group['xunits'] = ece_data.xunits
+                ece_group['yunits'] = ece_data.yunits
+                ece_group['eceunits'] = np.array(ece_data.zunits, dtype='S')
 
-#		rtece_group['xdata'] = rtece_data.xdata
-#		rtece_group['ydata'] = rtece_data.ydata
-#		rtece_group['xunits'] = rtece_data.xunits
-#		rtece_group['yunits'] = rtece_data.yunits
-#		rtece_group['rteceunits'] = rtece_data.zunits
+#                rtece_group['xdata'] = rtece_data.xdata
+#                rtece_group['ydata'] = rtece_data.ydata
+#                rtece_group['xunits'] = rtece_data.xunits
+#                rtece_group['yunits'] = rtece_data.yunits
+#                rtece_group['rteceunits'] = rtece_data.zunits
                 hf.close()
 
         if ts:
-                hf = h5py.File('/cscratch/chenn/data-fetching/data/'+ str(shotn)+'_ts.h5','w')
+                hf = h5py.File(f'/cscratch/{cscratch_username}/data-fetching/data/'+ str(shotn)+'_ts.h5','w')
                 for corediv in ['core','tan','div']:
                         for nete in ['ne','te']:
-                                print('ts%s_%s' % (nete,corediv))
+                                print('ts_%s_%s' % (nete,corediv))
                                 try: 
-                                    ts_data = gadata('ts%s_%s' % (nete,corediv), shotn, connection=atlconn)
+                                    ts_data = gadata('ts_%s_%s' % (nete,corediv), shotn, connection=atlconn)
 
                                     ts_group = hf.create_group('ts%s_%s' % (nete,corediv))
 
@@ -123,7 +124,7 @@ for shotn in shot_list:
 
                                     ts_group['ts%s_%s_xunits' % (nete,corediv)] = ts_data.xunits
                                     ts_group['ts%s_%s_yunits' % (nete,corediv)] = ts_data.yunits
-                                    ts_group['ts%s_%s_zunits' % (nete,corediv)] = ts_data.zunits
+                                    ts_group['ts%s_%s_zunits' % (nete,corediv)] = np.array(ts_data.zunits, dtype='S')
 
                                     ts_data = gadata('ts%s_e_%s' % (nete,corediv), shotn, connection=atlconn)
 
@@ -133,17 +134,18 @@ for shotn in shot_list:
 
                                     ts_group['ts%s_e_%s_xunits' % (nete,corediv)] = ts_data.xunits
                                     ts_group['ts%s_e_%s_yunits' % (nete,corediv)] = ts_data.yunits
-                                    ts_group['ts%s_e_%s_zunits' % (nete,corediv)] = ts_data.zunits
+                                    ts_group['ts%s_e_%s_zunits' % (nete,corediv)] = np.array(ts_data.zunits, dtype='S')
                                 except Exception as e:
-                                    print('Bad shot %d - ts%s_%s\n%s' % (shotn,nete,corediv,e))
-                                    with open('bad-shots.txt','a') as fid:
-                                            fid.write('%d - ts%s_%s\n' % (shotn,nete,corediv))
+                                        print(e)
+                                        print('Bad shot %d - ts%s_%s\n%s' % (shotn,nete,corediv,e))
+                                        with open('bad-shots.txt','a') as fid:
+                                                fid.write('%d - ts%s_%s\n' % (shotn,nete,corediv))
 
                 hf.close()
 
 
         if co2:
-                hf = h5py.File('/cscratch/chenn/data-fetching/data/'+ str(shotn)+'_co2.h5','w')
+                hf = h5py.File(f'/cscratch/{cscratch_username}/data-fetching/data/'+ str(shotn)+'_co2.h5','w')
                 for co2_chn in ['r0','v1','v2','v3']:
                         co2_group = hf.create_group('co2_%s' % (co2_chn))
                         if shotn <= 195740: # old pointnames: 
@@ -158,7 +160,11 @@ for shotn in shot_list:
 
                                         co2_group['co2_%s_%i_xunits' % (co2_chn,co2_idx)] = co2_data.xunits
                                         co2_group['co2_%s_%i_yunits' % (co2_chn,co2_idx)] = co2_data.yunits
-                                        co2_group['co2_%s_%i_zunits' % (co2_chn,co2_idx)] = co2_data.zunits
+                                        # print(type(co2_data.zunits))
+                                        # print(co2_data.zunits)
+                                        zunits_bytes = np.array(co2_data.zunits, dtype='S')  # or dtype='S1' if it's a single char
+                                        co2_group['co2_%s_%i_zunits' % (co2_chn, co2_idx)] = zunits_bytes
+                                        # co2_group['co2_%s_%i_zunits' % (co2_chn,co2_idx)] = co2_data.zunits
                         else:
                                 co2_data = gadata('den%suf' % (co2_chn), shotn, connection=atlconn)
 
@@ -173,7 +179,7 @@ for shotn in shot_list:
 
 
         if cer:
-                hf = h5py.File('/cscratch/chenn/data-fetching/data/'+ str(shotn)+'_cer.h5','w')
+                hf = h5py.File(f'/cscratch/{cscratch_username}/data-fetching/data/'+ str(shotn)+'_cer.h5','w')
                 for pref in ['crstit', 'crsrott', 'crsampt']:
                         for chn in np.arange(5,25):
                                 print('%s%d' % (pref,chn))
@@ -190,7 +196,7 @@ for shotn in shot_list:
 
 
         if mse:
-                hf = h5py.File('/cscratch/chenn/data-fetching/data/'+ str(shotn)+'_mse.h5','w')
+                hf = h5py.File(f'/cscratch/{cscratch_username}/data-fetching/data/'+ str(shotn)+'_mse.h5','w')
 
                 for k in range(69):
                         mse_group = hf.create_group('mse%d' % (k+1))
@@ -209,7 +215,7 @@ for shotn in shot_list:
         if magnetics:
                 with open('magnetics_list.txt','r') as fid:
                         mag_list=fid.read().splitlines()
-                hf = h5py.File('/cscratch/chenn/data-fetching/data/'+ str(shotn)+'_magnetics.h5','w')
+                hf = h5py.File(f'/cscratch/{cscratch_username}/data-fetching/data/'+ str(shotn)+'_magnetics.h5','w')
 
                 for mag_name in mag_list:
                         mag_group = hf.create_group(mag_name)
@@ -225,4 +231,4 @@ for shotn in shot_list:
 
                 hf.close()
 
-#	print('time per shot:%ds' % (time.time()-t1))
+#        print('time per shot:%ds' % (time.time()-t1))
